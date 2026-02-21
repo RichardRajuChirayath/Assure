@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import db from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Server-Sent Events endpoint for real-time dashboard updates.
  * The client opens a persistent connection and receives live risk events.
