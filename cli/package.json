@@ -1,0 +1,15 @@
+{
+    "name": "assure-cli",
+    "version": "1.0.0",
+    "description": "Assure — Pre-execution safety layer CLI",
+    "bin": {
+        "assure": "./src/index.js"
+    },
+    "keywords": [
+        "safety",
+        "risk",
+        "devops",
+        "cli"
+    ],
+    "license": "MIT"
+}

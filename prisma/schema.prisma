@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  clerkId       String    @unique
+  email         String    @unique
+  name          String?
+  role          String    @default("OPERATOR") // ADMIN, OWNER, OPERATOR
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  workflows     Workflow[]
+  riskEvents    RiskEvent[]
+  settings      EngineSettings?
+}
+
+model EngineSettings {
+  id              String   @id @default(cuid())
+  riskThreshold   Int      @default(70)
+  fridayBlock     Boolean  @default(true)
+  prodOnly        Boolean  @default(true)
+  notifications   Boolean  @default(true)
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  updatedAt       DateTime @updatedAt
+}
+
+model Workflow {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  type          String    // DEPLOY, DATABASE, CONFIG
+  status        String    @default("ACTIVE")
+  config        Json?     // Stores the checklist and risk rules
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  creatorId     String
+  creator       User      @relation(fields: [creatorId], references: [id])
+  riskEvents    RiskEvent[]
+}
+
+model RiskEvent {
+  id            String    @id @default(cuid())
+  actionType    String    // e.g., "PRISMA_MIGRATE"
+  riskScore     Float
+  verdict       String    // BLOCKED, ALLOWED, OVERRIDDEN
+  reasoning     String?   @db.Text
+  context       Json?     // Stores metadata about the environment, timing, etc.
+  createdAt     DateTime  @default(now())
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id])
+  workflowId    String?
+  workflow      Workflow? @relation(fields: [workflowId], references: [id])
+  auditLogs     AuditLog[]
+}
+
+model AuditLog {
+  id            String    @id @default(cuid())
+  event         String    // e.g., "INTERVENTION_OVERRIDE"
+  details       String?   @db.Text
+  blockchainHash String?  // TX hash from Integrity Layer anchoring
+  createdAt     DateTime  @default(now())
+  riskEventId   String?
+  riskEvent     RiskEvent? @relation(fields: [riskEventId], references: [id])
+}
