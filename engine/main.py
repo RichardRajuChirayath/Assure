@@ -142,48 +142,113 @@ class AssureIntelligencePlatform:
         payload = data.get("payload", {})
         code = str(payload.get("command", payload.get("contentSnippet", "")))
         env = str(data.get("environment", "")).upper()
-        
-        # 1. Deep Perception (CodeBERT Vector)
+        code_lower = code.lower().strip()
+
+        # ═══════════════════════════════════════════════════════════
+        # LAYER 1: Deterministic Rules Matrix (Safety DNA)
+        # ML can hallucinate. Rules cannot. This is the backbone.
+        # ═══════════════════════════════════════════════════════════
+        rules_score = 0.0
+        rules_flags = []
+
+        dangerous_patterns = [
+            ("rm -rf", 45, "Recursive force-delete: catastrophic data loss vector"),
+            ("rm -r", 40, "Recursive delete: high data loss potential"),
+            ("rmdir /s", 35, "Windows recursive directory removal"),
+            ("del /f", 35, "Windows force-delete detected"),
+            ("format c:", 50, "Disk format: total system wipe"),
+            ("mkfs", 45, "Filesystem format: complete data destruction"),
+            ("dd if=", 40, "Raw disk write: potential data overwrite"),
+            (":(){ :|:& };:", 50, "Fork bomb: denial of service attack"),
+            ("> /dev/sda", 50, "Raw device overwrite: catastrophic"),
+            ("drop table", 45, "SQL DROP TABLE: irreversible schema destruction"),
+            ("drop database", 50, "SQL DROP DATABASE: complete database wipe"),
+            ("truncate table", 35, "SQL TRUNCATE: bulk data wipe"),
+            ("delete from", 30, "SQL DELETE: mass record removal"),
+            ("kubectl delete", 40, "Kubernetes resource deletion"),
+            ("kubectl delete namespace", 50, "Namespace deletion: multi-service cascade"),
+            ("terraform destroy", 50, "Infrastructure teardown: full env destruction"),
+            ("docker system prune", 35, "Docker system prune: mass cleanup"),
+            ("aws s3 rm", 35, "AWS S3 deletion: cloud storage wipe"),
+            ("aws ec2 terminate", 40, "EC2 instance termination"),
+            ("heroku apps:destroy", 45, "Heroku app destruction"),
+            ("chmod 777", 30, "World-writable permissions: security hole"),
+            ("iptables -f", 35, "Firewall flush: all rules removed"),
+            ("--no-preserve-root", 30, "Root preservation disabled"),
+        ]
+
+        force_modifiers = [
+            ("--force", 15, "Force flag: safety checks bypassed"),
+            ("-f ", 10, "Force shorthand flag"),
+            ("--no-verify", 12, "Verification bypass flag"),
+            ("--yes", 8, "Auto-confirm: no human confirmation"),
+        ]
+
+        for pattern, score, reason in dangerous_patterns + force_modifiers:
+            if pattern in code_lower:
+                rules_score += score
+                rules_flags.append(reason)
+
+        if env == "PRODUCTION" and rules_score > 0:
+            rules_flags.append(f"PRODUCTION environment: risk amplified 1.5x (base {int(rules_score)})")
+            rules_score *= 1.5
+
+        rules_score = min(80, rules_score)
+
+        # ═══════════════════════════════════════════════════════════
+        # LAYER 2: CodeBERT Semantic Perception
+        # ═══════════════════════════════════════════════════════════
         intent_vec = self.perception.get_intent_vector(code)
-        
-        # 2. Graph Blast Radius (NetworkX Propagation)
+        intent_signal = abs(float(np.mean(intent_vec)))
+        perception_score = min(15, intent_signal * 30)
+
+        # ═══════════════════════════════════════════════════════════
+        # LAYER 3: Graph Blast Radius (NetworkX Propagation)
+        # ═══════════════════════════════════════════════════════════
         blast_radius = self.graph.calculate_blast_radius(code)
-        
-        # 3. Assemble Probing Features
+
+        # ═══════════════════════════════════════════════════════════
+        # LAYER 4: XGBoost Risk Network
+        # ═══════════════════════════════════════════════════════════
         features = np.array([[
             1.0 if env == "PRODUCTION" else 0.4,
-            1.0 if any(kw in code for kw in ["force", "-f"]) else 0.0,
-            float(np.mean(intent_vec)), # Semantic Signal
+            1.0 if any(kw in code_lower for kw in ["force", "-f", "--force"]) else 0.0,
+            intent_signal,
             blast_radius / 100.0,
-            random.uniform(0.1, 0.9), # Historical Pattern
-            0.8 # Learning Bias
+            min(1.0, rules_score / 50.0),
+            0.8
         ]])
         X_df = pd.DataFrame(features, columns=["env", "bypass", "intent", "blast", "hist", "bias"])
-
-        # 4. Neural Verdict (XGBoost)
         risk_prob = float(self.risk_net.predict_proba(X_df)[:, 1][0])
-        
-        # 5. Explainable Forensics (SHAP)
+        risk_net_score = min(15, float(risk_prob * 15))
+
+        # ═══════════════════════════════════════════════════════════
+        # LAYER 5: SHAP Forensics
+        # ═══════════════════════════════════════════════════════════
         shap_explain = self.forensics.explain(X_df)
-        
-        # 6. Verdict Engine
-        perception_score = float(np.mean(intent_vec)) * 20 if float(np.mean(intent_vec)) > 0 else 0
-        risk_net_score = float(risk_prob * 40)
-        impact_score = float(blast_radius * 0.4)
+
+        # ═══════════════════════════════════════════════════════════
+        # FINAL: Rules dominate, ML supplements
+        # ═══════════════════════════════════════════════════════════
         fatigue_penalty = SafetyForecaster.get_fatigue_penalty()
-        
-        final_score = perception_score + risk_net_score + impact_score + fatigue_penalty
+        final_score = rules_score + perception_score + risk_net_score + fatigue_penalty
         final_score = min(100, max(0, final_score))
-        verdict = "BLOCK" if final_score >= 75 else "WARN" if final_score >= 40 else "ALLOW"
+        verdict = "BLOCK" if final_score >= 70 else "WARN" if final_score >= 40 else "ALLOW"
 
         breakdown = {
             "perception": int(perception_score),
             "risk_net": int(risk_net_score),
-            "anomaly": int(fatigue_penalty),
-            "impact_net": int(impact_score),
+            "anomaly": int(fatigue_penalty + perception_score),
+            "impact_net": int(rules_score),
             "blast_radius": int(blast_radius),
             "final_score": int(final_score)
         }
+
+        reasoning = list(rules_flags)
+        if blast_radius > 20:
+            reasoning.append(f"Graph: Targeted node has {int(blast_radius/20)} downstream dependencies.")
+        if not reasoning:
+            reasoning.append("No critical safety flags triggered. Command appears low-risk.")
 
         return {
             "risk_score": float(final_score),
@@ -192,14 +257,10 @@ class AssureIntelligencePlatform:
             "breakdown": breakdown,
             "forensics": {
                 "blast_radius": blast_radius,
-                "semantic_intent": float(np.mean(intent_vec)),
+                "semantic_intent": intent_signal,
                 "shap_contributions": shap_explain.tolist() if hasattr(shap_explain, 'tolist') else shap_explain
             },
-            "reasoning": [r for r in [
-                f"Graph Discovery: Targeted node has {int(blast_radius/20)} downstream dependencies." if blast_radius > 20 else None,
-                "Forensics: SHAP identifies Environment as the primary risk driver." if shap_explain[0] > 0.5 else None,
-                "Neural Perception: Token intent architecture matches MALICIOUS_BYPASS." if np.mean(intent_vec) > 0.5 else None
-            ] if r is not None],
+            "reasoning": [r for r in reasoning if r is not None],
             "latency_ms": int((time.time() - start_time) * 1000)
         }
 
