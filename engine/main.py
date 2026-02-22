@@ -63,7 +63,7 @@ class CodePerceptionLayer:
             return np.random.rand(768) 
         
         inputs = self.tokenizer(code_snippet, return_tensors="pt", truncation=True, max_length=128)
-        with torch.no_state_dict():
+        with torch.no_grad():
             outputs = self.model(**inputs)
         # Use mean pooling of the last hidden states as the intent embedding
         return outputs.last_hidden_state.mean(dim=1).detach().numpy().flatten()
@@ -131,7 +131,8 @@ class AssureIntelligencePlatform:
         # Real XGBoost with 6 Safety Features
         self.risk_net = xgb.XGBClassifier(n_estimators=100, max_depth=5)
         # Self-train on base safety protocols
-        self.risk_net.fit(np.random.rand(50, 6), np.random.randint(0, 2, 50))
+        dummy_X = pd.DataFrame(np.random.rand(50, 6), columns=["env", "bypass", "intent", "blast", "hist", "bias"])
+        self.risk_net.fit(dummy_X, np.random.randint(0, 2, 50))
         
         self.forensics = AssureForensics(self.risk_net)
         self.learning_core = SafetyLearningCore() # Reinforcement Layer
