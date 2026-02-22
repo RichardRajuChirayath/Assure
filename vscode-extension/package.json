@@ -30,7 +30,7 @@
             "properties": {
                 "assure.apiUrl": {
                     "type": "string",
-                    "default": "http://localhost:3001",
+                    "default": "https://assure-production.up.railway.app/api",
                     "description": "The base URL for the Assure Backend API."
                 },
                 "assure.apiKey": {

@@ -43,12 +43,15 @@ export async function anchorHashOnChain(rootHash: string, metadata: string): Pro
         const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
         const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, wallet);
 
-        // Optimized gas settings for Polygon Amoy (confirmed working)
-        // Each TX costs ~0.0025 MATIC at these settings
+        // Dynamically fetch current network fees to ensure the TX is accepted
+        const feeData = await provider.getFeeData();
+        const maxFee = feeData.maxFeePerGas || ethers.parseUnits("55", "gwei");
+        const maxPriority = feeData.maxPriorityFeePerGas || ethers.parseUnits("50", "gwei");
+
         const tx = await contract.anchorAudit(rootHash, metadata, {
             gasLimit: 120000,
-            maxFeePerGas: ethers.parseUnits("35", "gwei"),
-            maxPriorityFeePerGas: ethers.parseUnits("30", "gwei"),
+            maxFeePerGas: maxFee,
+            maxPriorityFeePerGas: maxPriority,
         });
         const receipt = await tx.wait();
 
