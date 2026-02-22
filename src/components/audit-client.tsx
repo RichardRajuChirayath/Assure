@@ -45,7 +45,8 @@ export function AuditClient({ auditLogs, riskEvents }: AuditClientProps) {
         try {
             const result = await anchorAuditLogs();
             setAnchorResult(result.message);
-            setTimeout(() => window.location.reload(), 2000);
+            // Wait for response before reloading (blockchain sim takes ~4s)
+            setTimeout(() => window.location.reload(), 1000);
         } catch (err) {
             setAnchorResult("Sync failed. Check connection.");
         } finally {

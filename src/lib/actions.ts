@@ -176,19 +176,16 @@ export async function anchorAuditLogs() {
     const { user } = await getAuthUser();
     const userFilter = user ? { userId: user.id } : {};
 
+    // 1. Find events that have NO audit log entries at all
     const unanchoredEvents = await db.riskEvent.findMany({
         where: { auditLogs: { none: {} }, ...userFilter },
         orderBy: { createdAt: 'desc' },
         take: 50
     });
 
-    if (unanchoredEvents.length === 0) {
-        return { message: "No events to anchor.", count: 0 };
-    }
-
-    const auditEntries = [];
+    // 2. Create audit log entries for unanchored events
     for (const event of unanchoredEvents) {
-        const log = await db.auditLog.create({
+        await db.auditLog.create({
             data: {
                 event: `${event.verdict}: ${event.actionType}`,
                 details: event.reasoning || "No details",
@@ -196,29 +193,40 @@ export async function anchorAuditLogs() {
                 blockchainHash: null
             }
         });
-        auditEntries.push(log);
     }
 
+    // 3. Find ALL audit log entries stuck without a blockchain hash
+    const pendingLogs = await db.auditLog.findMany({
+        where: { blockchainHash: null, ...(user ? { riskEvent: { userId: user.id } } : {}) },
+        take: 100
+    });
+
+    if (pendingLogs.length === 0) {
+        return { message: "All logs are verified.", count: 0 };
+    }
+
+    // 4. Hash and anchor
     const { hashAuditBatch } = await import("./blockchain");
-    const batchData = auditEntries.map(l => ({
+    const batchData = pendingLogs.map(l => ({
         id: l.id, event: l.event, createdAt: l.createdAt.toISOString()
     }));
     const rootHash = hashAuditBatch(batchData);
 
     const { anchorHashOnChain } = await import("./blockchain");
-    const txHash = await anchorHashOnChain(rootHash, `Batch of ${auditEntries.length} audit logs`);
+    const txHash = await anchorHashOnChain(rootHash, `Batch of ${pendingLogs.length} audit logs`);
 
     if (txHash) {
-        for (const entry of auditEntries) {
-            await db.auditLog.update({ where: { id: entry.id }, data: { blockchainHash: txHash } });
-        }
+        await db.auditLog.updateMany({
+            where: { id: { in: pendingLogs.map(l => l.id) } },
+            data: { blockchainHash: txHash }
+        });
     }
 
     return {
         message: txHash
-            ? `Anchored ${auditEntries.length} logs. TX: ${txHash}`
-            : `Created ${auditEntries.length} audit entries. Blockchain anchor skipped (no contract configured).`,
-        count: auditEntries.length, rootHash, txHash
+            ? `Verified ${pendingLogs.length} logs. TX: ${txHash}`
+            : `Created audit entries. Blockchain anchor skipped.`,
+        count: pendingLogs.length, rootHash, txHash
     };
 }
 
