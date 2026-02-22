@@ -1,6 +1,6 @@
 "use server";
 
-const ENGINE_URL = process.env.ENGINE_URL || "http://127.0.0.1:8000";
+const ENGINE_URL = process.env.ENGINE_URL || "https://engine-production-0c83.up.railway.app";
 
 export async function evaluateRisk(data: {
     action_type: string;
