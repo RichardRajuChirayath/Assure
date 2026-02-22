@@ -16,10 +16,11 @@ async function main() {
     console.log(`Max Fee Per Gas: ${ethers.formatUnits(feeData.maxFeePerGas || 0, "gwei")} gwei`);
     console.log(`Max Priority Fee: ${ethers.formatUnits(feeData.maxPriorityFeePerGas || 0, "gwei")} gwei`);
 
-    // Calculate max affordable TX
-    const gasLimit = 100000n;
-    const gasPrice = feeData.gasPrice || 0n;
+    // Fix: Remove BigInt literals (100n) and replace with BigInt() constructor for broader compatibility
+    const gasLimit = BigInt(100000);
+    const gasPrice = feeData.gasPrice || BigInt(0);
     const txCost = gasLimit * gasPrice;
+
     console.log(`\nCost of 1 TX (100k gas): ${ethers.formatEther(txCost)} MATIC`);
     console.log(`Can afford: ${Number(balance) / Number(txCost)} TXs`);
 }
