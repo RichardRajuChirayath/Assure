@@ -32,13 +32,13 @@ export function AuditClient({ auditLogs, riskEvents }: AuditClientProps) {
 
     const pendingCount = riskEvents.filter(e => !anchorMap.has(e.id)).length;
 
-    // Auto-Sync Background Routine
-    useEffect(() => {
-        if (pendingCount > 0 && !anchoring) {
-            console.log(`[Integrity] Detected ${pendingCount} pending logs. Initiating background sync...`);
-            handleManualSync();
-        }
-    }, [pendingCount]);
+    // Auto-Sync disabled — use the manual Sync button to control gas usage
+    // useEffect(() => {
+    //     if (pendingCount > 0 && !anchoring) {
+    //         console.log(`[Integrity] Detected ${pendingCount} pending logs. Initiating background sync...`);
+    //         handleManualSync();
+    //     }
+    // }, [pendingCount]);
 
     async function handleManualSync() {
         setAnchoring(true);
