@@ -116,8 +116,9 @@ export async function logRiskEvent(data: {
         }
     });
 
-    // Automatic Blockchain Anchoring (Fire & Forget for Demo)
-    anchorAuditLogs().catch(err => console.error("Auto-anchor failed:", err));
+    // Automatic Blockchain Anchoring disabled to prevent gas bleed.
+    // Use the manual 'Sync' button to batch logs and save 100x on gas.
+    // anchorAuditLogs().catch(err => console.error("Auto-anchor failed:", err));
 
     return event;
 }
