@@ -195,11 +195,11 @@ class AssureIntelligencePlatform:
                 "semantic_intent": float(np.mean(intent_vec)),
                 "shap_contributions": shap_explain.tolist() if hasattr(shap_explain, 'tolist') else shap_explain
             },
-            "reasoning": [
+            "reasoning": [r for r in [
                 f"Graph Discovery: Targeted node has {int(blast_radius/20)} downstream dependencies." if blast_radius > 20 else None,
                 "Forensics: SHAP identifies Environment as the primary risk driver." if shap_explain[0] > 0.5 else None,
                 "Neural Perception: Token intent architecture matches MALICIOUS_BYPASS." if np.mean(intent_vec) > 0.5 else None
-            ],
+            ] if r is not None],
             "latency_ms": int((time.time() - start_time) * 1000)
         }
 
