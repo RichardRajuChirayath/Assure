@@ -27,21 +27,14 @@ export function AuditVerifyClient({ initialId = "" }: { initialId?: string }) {
         setResult(null);
 
         try {
-            // Simulated call to blockchain verification (Phase 2 Link)
-            // In a real app, this calls our Smart Contract via the bridge
-            await new Promise(r => setTimeout(r, 1500));
+            // Real call to our bridge API which talks to Polygon
+            const response = await fetch(`/api/verify-on-chain?id=${idToVerify}`);
+            const data = await response.json();
 
-            if (idToVerify) {
-                // Generate deterministic mock data based on ID
-                setResult({
-                    rootHash: `0x${idToVerify.replace(/-/g, '').substring(0, 40) || '74656d706c6174655f686173685f6173737572655f'}`,
-                    timestamp: Math.floor(Date.now() / 1000) - 120,
-                    metadata: `Assure Audit Record ${idToVerify.substring(0, 8)}`,
-                    txHash: `0x${idToVerify.replace(/-/g, '').substring(0, 60) || '123abc456def'}`.padEnd(66, '0'),
-                    status: "VERIFIED"
-                });
+            if (response.ok) {
+                setResult(data);
             } else {
-                setError("Anchor ID not found on-chain. Please check the ID and try again.");
+                setError(data.error || "Anchor ID not found on-chain. Please check the ID and try again.");
             }
         } catch (err) {
             setError("Failed to connect to blockchain node.");
