@@ -15,7 +15,7 @@ export class AssureService {
     private static getConfiguration() {
         const config = vscode.workspace.getConfiguration('assure');
         return {
-            apiUrl: config.get<string>('apiUrl') || 'http://localhost:3001',
+            apiUrl: config.get<string>('apiUrl') || 'https://assure-production.up.railway.app/api',
             apiKey: config.get<string>('apiKey') || ''
         };
     }
