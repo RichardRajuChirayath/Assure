@@ -36,15 +36,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  // Detect both correct spelling and potential typo found in environment config (PUBLTSHABLE)
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || (process.env as any).NEXT_PUBLIC_CLERK_PUBLTSHABLE_KEY;
 
   if (!publishableKey && process.env.NODE_ENV === 'production') {
-    console.warn("⚠️ Warning: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is not defined. Authentication will fail.");
+    console.warn("⚠️ ERROR: Clerk Publishable Key is missing or has a typo in Railway (Check: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)");
   }
+
+  // Provide a safe placeholder ONLY to allow the build/compiler to finish.
+  // The real key from Railway will be used at runtime if provided.
+  const activeKey = publishableKey || "pk_test_YnVpbGQtdGltZS1ieXBhc3Mta2V5LWRvLW5vdC11c2U=";
 
   return (
     <ClerkProvider
-      publishableKey={publishableKey}
+      publishableKey={activeKey}
       appearance={{ baseTheme: dark }}
     >
       <html lang="en">
