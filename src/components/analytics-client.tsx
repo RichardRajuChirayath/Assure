@@ -1,8 +1,10 @@
 "use client";
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { TrendingUp, PieChart as PieIcon, BarChart3 } from "lucide-react";
+import { SafetyScorecards } from "@/components/safety-scorecards";
 
 interface AnalyticsClientProps {
     trendData: { index: number; score: number; time: string; verdict: string }[];
@@ -16,7 +18,7 @@ const CustomTooltip = ({ active, payload }: any) => {
             <div className="bg-[#0a0a1a] border border-white/10 rounded-xl p-3 shadow-xl">
                 <p className="text-xs font-black text-white">Score: {data.score}</p>
                 <p className="text-[10px] text-muted uppercase">{data.verdict}</p>
-                <p className="text-[10px] text-zinc-500">{new Date(data.time).toLocaleString()}</p>
+                <p className="text-[10px] text-zinc-500">{format(new Date(data.time), 'Pp')}</p>
             </div>
         );
     }
@@ -68,7 +70,7 @@ export function AnalyticsClient({ trendData, verdictData }: AnalyticsClientProps
                     </h3>
                     {trendData.length === 0 ? (
                         <div className="h-[300px] flex items-center justify-center text-zinc-500 italic text-sm">
-                            No data yet. Run simulations to populate the chart.
+                            No data yet. Execute commands via CLI or Dashboard to populate the chart.
                         </div>
                     ) : (
                         <ResponsiveContainer width="100%" height={300}>
@@ -143,6 +145,11 @@ export function AnalyticsClient({ trendData, verdictData }: AnalyticsClientProps
                         </ResponsiveContainer>
                     )}
                 </motion.div>
+            </div>
+
+            {/* Phase 3: Safety Memory Scorecards */}
+            <div className="mt-12">
+                <SafetyScorecards />
             </div>
         </div>
     );

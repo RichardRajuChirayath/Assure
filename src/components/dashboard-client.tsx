@@ -1,10 +1,13 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { RiskSimulator } from "@/components/risk-simulator";
 import { formatDistanceToNow } from "date-fns";
-import { ShieldAlert, Zap, TrendingUp, AlertTriangle, ChevronRight, Activity, Loader2 } from "lucide-react";
+import { ShieldAlert, Zap, TrendingUp, AlertTriangle, ChevronRight, Activity, Loader2, Shield, Globe, Fingerprint } from "lucide-react";
 import { useRealtime } from "@/lib/useRealtime";
+import { ShieldSimulation } from "@/components/shield-simulation";
 
 interface DashboardClientProps {
     stats: {
@@ -17,7 +20,18 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ stats: initialStats, recentEvents: initialEvents }: DashboardClientProps) {
+    const router = useRouter();
+    const [downloading, setDownloading] = useState(false);
     const { data: realtimeData, connected } = useRealtime();
+
+    const handleDownload = () => {
+        setDownloading(true);
+        // Direct link to the public artifact we just built
+        setTimeout(() => {
+            setDownloading(false);
+            window.location.href = "/assure.vsix";
+        }, 1500);
+    };
 
     // Use realtime data if available, fallback to server-side initial stats
     const displayStats = realtimeData ? {
@@ -56,8 +70,8 @@ export function DashboardClient({ stats: initialStats, recentEvents: initialEven
                             <AlertTriangle className="w-5 h-5 text-amber-500" />
                         </div>
                         <div>
-                            <h4 className="text-sm font-black text-white uppercase tracking-widest">Global Risk Warning: Friday Window</h4>
-                            <p className="text-xs text-amber-500/80 font-medium italic">Engine v4.0 has increased sensitivity due to weekend onset. Proceed with caution.</p>
+                            <h4 className="text-sm font-black text-white uppercase tracking-widest">Safety Intelligence Platform v3.0</h4>
+                            <p className="text-xs text-amber-500/80 font-medium italic">Phase 3 Perception Layer active. BERT-based intent analysis online.</p>
                         </div>
                     </div>
                 </motion.div>
@@ -95,7 +109,7 @@ export function DashboardClient({ stats: initialStats, recentEvents: initialEven
                 />
             </div>
 
-            {/* Simulation & Intelligence Section */}
+            {/* Preflight Gate & Intelligence Section */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div className="lg:col-span-8">
                     <RiskSimulator />
@@ -194,11 +208,50 @@ export function DashboardClient({ stats: initialStats, recentEvents: initialEven
                     </div>
                 </div>
             </div>
+
+            {/* Phase 3 Ecosystem: VS Code Extension */}
+            <div className="mt-12 p-10 rounded-[48px] bg-primary/10 border border-primary/20 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:opacity-10 transition-opacity whitespace-pre font-mono text-[8px] text-primary select-none">
+                    {`01100001 01110011 01110011 01110101 01110010 01100101`}
+                </div>
+                <div className="max-w-2xl relative z-10">
+                    <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-4">
+                        <Globe className="w-4 h-4" /> Integrated Safety Ecosystem
+                    </div>
+                    <h2 className="text-4xl font-black text-white uppercase tracking-tighter italic mb-4 leading-tight">
+                        Safety Everywhere: <span className="text-primary">Assure IDE</span>
+                    </h2>
+                    <p className="text-zinc-400 font-medium leading-relaxed mb-8">
+                        Stop destructive changes before they even hit your terminal. The Assure VS Code extension brings our **Neural Perception** and **PlanNet Recommendations** directly into your editor.
+                    </p>
+                    <div className="flex flex-wrap gap-4">
+                        <button
+                            onClick={handleDownload}
+                            disabled={downloading}
+                            className="px-10 py-5 bg-primary text-white text-xs font-black rounded-2xl hover:scale-105 active:scale-95 transition-all uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(124,105,239,0.3)] flex items-center gap-3 disabled:opacity-50"
+                        >
+                            {downloading ? (
+                                <>Building Package <Loader2 className="w-4 h-4 animate-spin" /></>
+                            ) : (
+                                <>Download VSIX <Shield className="w-4 h-4" /></>
+                            )}
+                        </button>
+                        <button
+                            onClick={() => router.push('/dashboard/settings')}
+                            className="px-10 py-5 bg-white/5 text-white text-xs font-black rounded-2xl border border-white/10 hover:bg-white/10 transition-all uppercase tracking-[0.2em]"
+                        >
+                            API Credentials
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     );
 }
 
-import { AnimatePresence } from "framer-motion";
+// Removing duplicate import below
+
 
 function StatCard({ title, value, trend, icon, color }: any) {
     return (

@@ -51,12 +51,14 @@ async function getAuthUser() {
 // ─── Dashboard Stats ───────────────────────────────────────
 export async function getDashboardStats() {
     const { user } = await getAuthUser();
+    const userFilter = user ? { userId: user.id } : {};
 
-    const preventedFailures = await db.riskEvent.count({ where: { verdict: "BLOCKED" } });
-    const activeWorkflows = await db.workflow.count({ where: { status: "ACTIVE" } });
+    const preventedFailures = await db.riskEvent.count({ where: { verdict: "BLOCKED", ...userFilter } });
+    const activeWorkflows = await db.workflow.count({ where: { status: "ACTIVE", ...(user ? { creatorId: user.id } : {}) } });
     const estimatedSavings = preventedFailures * 1500;
 
     const recentEvents = await db.riskEvent.findMany({
+        where: userFilter,
         take: 10, orderBy: { createdAt: 'desc' }, select: { riskScore: true }
     });
 
@@ -107,19 +109,26 @@ export async function logRiskEvent(data: {
         throw new Error(parsed.error.issues.map((e: z.ZodIssue) => e.message).join(", "));
     }
 
-    return await db.riskEvent.create({
+    const event = await db.riskEvent.create({
         data: {
             ...parsed.data,
             userId: user?.id || null
         }
     });
+
+    // Automatic Blockchain Anchoring (Fire & Forget for Demo)
+    anchorAuditLogs().catch(err => console.error("Auto-anchor failed:", err));
+
+    return event;
 }
 
 // ─── Recent Events ─────────────────────────────────────────
 export async function getRecentRiskEvents() {
-    await getAuthUser();
+    const { user } = await getAuthUser();
+    const userFilter = user ? { userId: user.id } : {};
 
     return await db.riskEvent.findMany({
+        where: userFilter,
         take: 20,
         orderBy: { createdAt: 'desc' },
         include: { user: true, auditLogs: true }
@@ -128,9 +137,11 @@ export async function getRecentRiskEvents() {
 
 // ─── Chart Data: Risk Score Over Time ──────────────────────
 export async function getRiskTrendData() {
-    await getAuthUser();
+    const { user } = await getAuthUser();
+    const userFilter = user ? { userId: user.id } : {};
 
     const events = await db.riskEvent.findMany({
+        where: userFilter,
         take: 30,
         orderBy: { createdAt: 'asc' },
         select: { riskScore: true, createdAt: true, verdict: true }
@@ -146,11 +157,12 @@ export async function getRiskTrendData() {
 
 // ─── Chart Data: Verdict Distribution ──────────────────────
 export async function getVerdictDistribution() {
-    await getAuthUser();
+    const { user } = await getAuthUser();
+    const userFilter = user ? { userId: user.id } : {};
 
-    const blocked = await db.riskEvent.count({ where: { verdict: "BLOCKED" } });
-    const allowed = await db.riskEvent.count({ where: { verdict: "ALLOWED" } });
-    const overridden = await db.riskEvent.count({ where: { verdict: "OVERRIDDEN" } });
+    const blocked = await db.riskEvent.count({ where: { verdict: "BLOCKED", ...userFilter } });
+    const allowed = await db.riskEvent.count({ where: { verdict: "ALLOWED", ...userFilter } });
+    const overridden = await db.riskEvent.count({ where: { verdict: "OVERRIDDEN", ...userFilter } });
 
     return [
         { name: "Blocked", value: blocked, fill: "#f43f5e" },
@@ -161,10 +173,11 @@ export async function getVerdictDistribution() {
 
 // ─── Blockchain Anchoring ──────────────────────────────────
 export async function anchorAuditLogs() {
-    await getAuthUser();
+    const { user } = await getAuthUser();
+    const userFilter = user ? { userId: user.id } : {};
 
     const unanchoredEvents = await db.riskEvent.findMany({
-        where: { auditLogs: { none: {} } },
+        where: { auditLogs: { none: {} }, ...userFilter },
         orderBy: { createdAt: 'desc' },
         take: 50
     });
@@ -211,9 +224,11 @@ export async function anchorAuditLogs() {
 
 // ─── Audit Logs ────────────────────────────────────────────
 export async function getAuditLogs() {
-    await getAuthUser();
+    const { user } = await getAuthUser();
+    const userFilter = user ? { riskEvent: { userId: user.id } } : {};
 
     return await db.auditLog.findMany({
+        where: userFilter,
         take: 50,
         orderBy: { createdAt: 'desc' },
         include: { riskEvent: { include: { user: true } } }

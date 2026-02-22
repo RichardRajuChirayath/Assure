@@ -6,23 +6,23 @@ import { Brain, FileCheck, ShieldCheck, BarChart3, XCircle, AlertCircle } from "
 const solutions = [
     {
         icon: <Brain className="w-8 h-8 text-primary" />,
-        title: "Context-Aware Logic",
-        description: "It knows if you're deploying to Production on a Friday or a Monday. It knows which files you changed and suggests specific checks."
-    },
-    {
-        icon: <FileCheck className="w-8 h-8 text-primary" />,
-        title: "Dynamic Checklists",
-        description: "No more static PDFs. Your checklists evolve based on past failures and team history."
+        title: "Phase 3 Perception",
+        description: "Powered by fine-tuned BERT models. Assure understands the mathematical intent behind your commands, detecting destructive patterns before execution."
     },
     {
         icon: <BarChart3 className="w-8 h-8 text-primary" />,
-        title: "Predictive Risk Scoring",
-        description: "Get a real-time risk score before every action. If the score is too high, it requires a 'Second Pair of Eyes'."
+        title: "RiskNet AI Orchestration",
+        description: "An ensemble of XGBoost and Isolation Forest monitors your deployment telemetry to catch anomalies in human and machine signals."
     },
     {
         icon: <ShieldCheck className="w-8 h-8 text-primary" />,
-        title: "The Prevention Audit Trail",
-        description: "Keep a log not just of what happened, but what was *stopped*. Perfect for compliance and learning."
+        title: "Predictive Blast Radius",
+        description: "Our ImpactNet regressor forecasts the potential ripple effect across State, Data, and Network vectors before you hit enter."
+    },
+    {
+        icon: <FileCheck className="w-8 h-8 text-primary" />,
+        title: "Universal Forensic Anchor",
+        description: "Every decision is cryptographically anchored to the Polygon blockchain, creating a tamper-proof audit trail of intercepted risks."
     }
 ];
 

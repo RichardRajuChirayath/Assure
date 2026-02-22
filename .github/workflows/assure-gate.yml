@@ -1,0 +1,32 @@
+name: Assure Safety Gate
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Install dependencies
+        run: npm install axios
+
+      - name: Assure Safety Check
+        env:
+          ASSURE_BACKEND_URL: ${{ secrets.ASSURE_BACKEND_URL }}
+          COMMAND_TO_CHECK: "npm run deploy:prod"
+          ENVIRONMENT: "production"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/assure-gate.js
+
+      - name: Deploy
+        if: success()
+        run: echo "🚀 Deploying to Production safely..."

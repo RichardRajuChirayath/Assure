@@ -153,25 +153,26 @@ export default function SettingsPage() {
                 </div>
             </div>
 
-            {/* Integrity Layer */}
+            {/* Developer API & Ecosystem */}
             <div className="bg-secondary/40 border border-white/5 rounded-[32px] p-8 space-y-6">
                 <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
-                    <Fingerprint className="w-5 h-5 text-primary" /> Integrity Layer
+                    <Globe className="w-5 h-5 text-primary" /> Developer API & Ecosystem
                 </h3>
 
-                <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 space-y-3">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <div className="text-sm font-bold text-white">Blockchain Anchoring</div>
-                            <div className="text-[10px] text-muted">Polygon Amoy Testnet</div>
-                        </div>
-                        <div className="px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                            <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">Not Configured</span>
-                        </div>
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-4">
+                    <div>
+                        <div className="text-sm font-bold text-white mb-1">Assure Safety Signals API</div>
+                        <div className="text-[10px] text-muted">Integrate Assure's risk intelligence into external CLI tools, IDEs, and custom scripts.</div>
                     </div>
-                    <p className="text-[10px] text-zinc-500">
-                        Add <code className="text-indigo-400">NEXT_PUBLIC_AUDIT_CONTRACT</code>, <code className="text-indigo-400">AMOY_RPC_URL</code>, and <code className="text-indigo-400">BLOCKCHAIN_PRIVATE_KEY</code> to your environment to enable on-chain audit anchoring.
-                    </p>
+
+                    <div className="bg-black/40 p-3 rounded-lg border border-white/5 font-mono text-[10px] text-zinc-500">
+                        <span className="text-emerald-500">POST</span> /v3/risk/evaluate
+                    </div>
+
+                    <div className="flex gap-4">
+                        <button className="text-[10px] font-black text-primary uppercase tracking-widest hover:text-white transition-colors">Generate API Key</button>
+                        <button className="text-[10px] font-black text-muted uppercase tracking-widest hover:text-white transition-colors">Read Documentation</button>
+                    </div>
                 </div>
             </div>
 

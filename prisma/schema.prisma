@@ -7,6 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+  users       User[]
+  workflows   Workflow[]
+  policies    Policy[]
+  riskEvents  RiskEvent[]
+}
+
 model User {
   id            String    @id @default(cuid())
   clerkId       String    @unique
@@ -15,6 +26,8 @@ model User {
   role          String    @default("OPERATOR") // ADMIN, OWNER, OPERATOR
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
   workflows     Workflow[]
   riskEvents    RiskEvent[]
   settings      EngineSettings?
@@ -42,6 +55,8 @@ model Workflow {
   updatedAt     DateTime  @updatedAt
   creatorId     String
   creator       User      @relation(fields: [creatorId], references: [id])
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
   riskEvents    RiskEvent[]
 }
 
@@ -57,7 +72,21 @@ model RiskEvent {
   user          User?     @relation(fields: [userId], references: [id])
   workflowId    String?
   workflow      Workflow? @relation(fields: [workflowId], references: [id])
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
   auditLogs     AuditLog[]
+}
+
+model Policy {
+  id            String    @id @default(cuid())
+  name          String
+  payload       Json      // Policy conditions (e.g. { "min_score": 70, "require_mfa": true })
+  version       Int       @default(1)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 }
 
 model AuditLog {

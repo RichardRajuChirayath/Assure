@@ -1,4 +1,6 @@
-const ENGINE_URL = process.env.RISK_ENGINE_URL || "http://localhost:8000";
+"use server";
+
+const BACKEND_URL = process.env.ASSURE_BACKEND_URL || "http://127.0.0.1:3001";
 
 export async function evaluateRisk(data: {
     action_type: string;
@@ -6,28 +8,49 @@ export async function evaluateRisk(data: {
     payload?: any;
     threshold?: number;
 }) {
+    console.log("[Engine Bridge] Initiating evaluation for:", data.action_type);
     try {
-        const response = await fetch(`${ENGINE_URL}/evaluate`, {
+        console.log("[Engine Bridge] Targeting backend:", BACKEND_URL);
+        const response = await fetch(`${BACKEND_URL}/v2/risk/evaluate`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(data),
+            body: JSON.stringify({
+                actionType: data.action_type,
+                environment: data.environment,
+                payload: { ...data.payload, threshold: data.threshold },
+                operatorId: "dashboard-user"
+            }),
         });
 
         if (!response.ok) {
-            throw new Error("Risk Engine unavailable");
+            const errorText = await response.text().catch(() => "Unknown error");
+            console.error("[Engine Bridge] Backend error status:", response.status);
+            console.error("[Engine Bridge] Backend error body:", errorText);
+            throw new Error("Assure Backend unavailable");
         }
 
-        return await response.json();
+        const result = await response.json();
+        console.log("[Engine Bridge] Success! Mapped result score:", result.riskScore);
+
+        // Map Phase 2 backend response to UI format
+        return {
+            risk_score: result.riskScore,
+            verdict: result.verdict,
+            reasoning: result.reasoning,
+            confidence: result.mlConfidence,
+            is_anomaly: result.isAnomaly,
+            breakdown: result.breakdown,
+            planning: result.planning
+        };
     } catch (error) {
-        console.error("Risk Evaluation Failed:", error);
-        // Fallback to a safe but cautious score if engine is down
+        console.error("Assure Evaluation Failed:", error);
         return {
             risk_score: 50,
             verdict: "WARN",
-            reasoning: ["Risk Engine unreachable. Falling back to default safety mode."],
-            confidence: 0.5
+            reasoning: ["Assure Control Plane unreachable. Falling back to default safety mode."],
+            confidence: 0
         };
     }
 }

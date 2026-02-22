@@ -10,7 +10,7 @@ const PRODUCTION_NODES = [
     { id: 3, icon: <Server className="w-5 h-5" />, label: "East-02" },
 ];
 
-export function ShieldSimulation() {
+export function ShieldSimulation({ showSource = true }: { showSource?: boolean }) {
     const [pulses, setPulses] = useState<{ id: number; type: 'safe' | 'risk'; targetY: number }[]>([]);
     const [shockwaves, setShockwaves] = useState<{ id: number; x: number; y: number }[]>([]);
     const [stats, setStats] = useState({ blocked: 142, saved: 124800 });
@@ -95,14 +95,18 @@ export function ShieldSimulation() {
                         {/* Components Layout */}
                         <div className="absolute inset-0 flex items-center justify-between px-10 md:px-32">
 
-                            {/* Source: Terminal Node */}
-                            <motion.div className="flex flex-col items-center translate-z-[50px]">
-                                <div className="w-24 h-24 rounded-[32px] bg-secondary border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(0,0,0,0.5)] relative group cursor-default">
-                                    <div className="absolute inset-0 bg-primary/20 rounded-[32px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <Terminal className="w-10 h-10 text-white relative z-10" />
-                                    <div className="absolute -bottom-8 text-[10px] font-bold text-muted uppercase tracking-[0.3em]">Traffic Source</div>
-                                </div>
-                            </motion.div>
+                            {/* Source: Terminal Node - Only shown if enabled */}
+                            {showSource ? (
+                                <motion.div className="flex flex-col items-center translate-z-[50px]">
+                                    <div className="w-24 h-24 rounded-[32px] bg-secondary border border-white/10 flex items-center justify-center shadow-[0_0_40px_rgba(0,0,0,0.5)] relative group cursor-default">
+                                        <div className="absolute inset-0 bg-primary/20 rounded-[32px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <Terminal className="w-10 h-10 text-white relative z-10" />
+                                        <div className="absolute -bottom-8 text-[10px] font-bold text-muted uppercase tracking-[0.3em]">Traffic Source</div>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <div className="w-24 h-24" /> // Spacing placeholder
+                            )}
 
                             {/* The Holographic Shield */}
                             <div className="relative translate-z-[120px]">

@@ -7,7 +7,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "build:extension": "cd vscode-extension && npm run compile"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.38.1",

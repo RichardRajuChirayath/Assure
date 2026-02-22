@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛡️ Assure: Real-Time Safety Intelligence for DevOps
 
-## Getting Started
+Assure is a production-grade safety engine designed to prevent catastrophic infrastructure failures, security breaches, and accidental data destruction. It uses a **Hybrid Deep Learning** approach to analyze DevOps commands and code changes in real-time.
 
-First, run the development server:
+---
+
+## 🧠 Core Intelligence (Phase 3.5 Enterprise)
+
+Assure is powered by a multi-model "Safety Ensemble" that reasons about risk across four distinct layers:
+
+1.  **Neural Perception (CodeBERT)**: Uses Microsoft’s CodeBERT transformer to understand the mathematical intent of code tokens, detecting "masked" malicious intent that simple regex misses.
+2.  **Graph Discovery (NetworkX)**: Models your entire infrastructure as a Directed Graph. It uses risk propagation to calculate the true **Blast Radius** of a command.
+3.  **Explainable Forensics (SHAP)**: Uses Shapley Additive Explanations to provide human-readable breakdowns of every risk score.
+4.  **Temporal & Fatigue Analysis**: A "Prophet" inspired forecaster that increases vigilance during high-fatigue windows (late nights/Friday afternoons).
+
+---
+
+## 📦 Project Structure
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+├── engine/             # Python-based Real-Intelligence Engine (BERT/XGBoost/GNN)
+├── backend/            # Fastify API (JWT Auth, Risk Orchestration)
+├── vscode-extension/   # VS Code Extension for real-time IDE safety
+├── src/                # Next.js Dashboard & Analytics Frontend
+└── prisma/             # Database Schema & Migrations
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Production Deployment Guide
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Engine (Python)
+The engine requires a GPU (optional but recommended) or a multi-core CPU for the Transformers.
+```bash
+cd engine
+pip install -r requirements.txt
+python main.py
+```
+*Port: 8000*
 
-## Learn More
+### 2. Backend (Fastify)
+Ensure your `.env` is configured with `DATABASE_URL` and `JWT_SECRET`.
+```bash
+cd backend
+npm install
+npm run build
+npm start
+```
+*Port: 3001*
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Frontend (Next.js)
+```bash
+npm install
+npm run build
+npm start
+```
+*Port: 3000*
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🔐 Security & Env Configuration
 
-## Deploy on Vercel
+**DO NOT** push `.env` files. Ensure you set the following in your environment:
+- `JWT_SECRET`: Master signature for safety handshakes.
+- `DATABASE_URL`: PostgreSQL/Prisma connection string.
+- `ASSURE_API_URL`: URL where the backend is hosted.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🛠️ Community & Development
+
+Developed for the future of Autonomous SRE. For local development, check out the `launch.json` in `.vscode`.
+
+**License: MIT**
