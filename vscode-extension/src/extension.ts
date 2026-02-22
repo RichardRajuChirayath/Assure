@@ -39,7 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
             );
 
             if (action === 'View in Dashboard') {
-                vscode.env.openExternal(vscode.Uri.parse('http://localhost:3000/dashboard'));
+                vscode.env.openExternal(vscode.Uri.parse('https://assure-production.up.railway.app/dashboard'));
             }
         });
     });

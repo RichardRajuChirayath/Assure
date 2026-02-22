@@ -2,7 +2,7 @@
     "name": "assure-vscode",
     "displayName": "Assure: Pre-Execution Safety",
     "description": "Real-time safety intelligence for risky DevOps changes.",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "publisher": "assure-tech",
     "engines": {
         "vscode": "^1.80.0"
