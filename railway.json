@@ -5,8 +5,9 @@
         "buildCommand": "prisma generate && next build"
     },
     "deploy": {
-        "startCommand": "npm run start",
+        "startCommand": "next start -p ${PORT:-3000} -H 0.0.0.0",
         "healthcheckPath": "/api/health",
+        "healthcheckTimeout": 300,
         "restartPolicyType": "ON_FAILURE"
     }
 }
