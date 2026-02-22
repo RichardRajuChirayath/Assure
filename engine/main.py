@@ -166,17 +166,29 @@ class AssureIntelligencePlatform:
         shap_explain = self.forensics.explain(X_df)
         
         # 6. Verdict Engine
-        final_score = (risk_prob * 60) + (blast_radius * 0.4)
-        # Apply fatigue penalty from SafetyForecaster
-        final_score += SafetyForecaster.get_fatigue_penalty()
+        perception_score = float(np.mean(intent_vec)) * 20 if float(np.mean(intent_vec)) > 0 else 0
+        risk_net_score = float(risk_prob * 40)
+        impact_score = float(blast_radius * 0.4)
+        fatigue_penalty = SafetyForecaster.get_fatigue_penalty()
         
-        final_score = min(100, final_score)
+        final_score = perception_score + risk_net_score + impact_score + fatigue_penalty
+        final_score = min(100, max(0, final_score))
         verdict = "BLOCK" if final_score >= 75 else "WARN" if final_score >= 40 else "ALLOW"
+
+        breakdown = {
+            "perception": int(perception_score),
+            "risk_net": int(risk_net_score),
+            "anomaly": int(fatigue_penalty),
+            "impact_net": int(impact_score),
+            "blast_radius": int(blast_radius),
+            "final_score": int(final_score)
+        }
 
         return {
             "risk_score": float(final_score),
             "verdict": verdict,
             "intelligence_tier": "Real Transformers (Phase 3.5)",
+            "breakdown": breakdown,
             "forensics": {
                 "blast_radius": blast_radius,
                 "semantic_intent": float(np.mean(intent_vec)),
