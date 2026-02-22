@@ -11,7 +11,7 @@ const teamScores = [
     { name: "DevOps Pipeline", score: 76, trend: "down", color: "text-amber-500", bg: "bg-amber-500/10" }
 ];
 
-export function SafetyScorecards() {
+export function SafetyScorecards({ totalEvents = 0 }: { totalEvents?: number }) {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -81,7 +81,7 @@ export function SafetyScorecards() {
                         "Across all 14 connected services, the most common root cause of 'Warned' verdicts is the use of the <span className="text-primary font-bold">--force</span> flag on non-critical resources. Assure recommends centralized policy enforcement for this flag."
                     </div>
                     <div className="flex justify-between items-center text-[10px] font-black text-primary uppercase tracking-widest">
-                        Data Source: 12k+ Analyzed Events
+                        Data Source: {totalEvents > 50 ? `${(totalEvents / 1000).toFixed(1)}k+` : totalEvents} Analyzed Events
                         <button className="text-white hover:text-primary transition-colors flex items-center gap-1">
                             Share Insights <ArrowUpRight className="w-3 h-3" />
                         </button>

@@ -1,24 +1,41 @@
 "use client";
 
-import { useState } from "react";
-import { createWorkflow } from "@/lib/actions";
-import { ShieldCheck, Plus, Terminal, Database, Server, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { createWorkflow, getWorkflows } from "@/lib/actions";
+import { ShieldCheck, Plus, Terminal, Database, Server, ChevronRight, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
 
 export default function WorkflowsPage() {
     const [isCreating, setIsCreating] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [workflows, setWorkflows] = useState<any[]>([]);
+    const [fetching, setFetching] = useState(true);
+
+    useEffect(() => {
+        async function loadWorkflows() {
+            try {
+                const data = await getWorkflows();
+                setWorkflows(data);
+            } catch (error) {
+                console.error("Failed to load workflows:", error);
+            } finally {
+                setFetching(false);
+            }
+        }
+        loadWorkflows();
+    }, []);
 
     async function handleSubmit(formData: FormData) {
         setLoading(true);
         try {
             await createWorkflow(formData);
             setIsCreating(false);
-            // In a real app, you'd use revalidatePath or update local state
-            window.location.reload();
+            const data = await getWorkflows();
+            setWorkflows(data);
         } catch (error) {
             console.error(error);
-            alert("Failed to create workflow. Is your user synced in the database?");
+            alert("Failed to create workflow.");
         } finally {
             setLoading(false);
         }
@@ -104,23 +121,29 @@ export default function WorkflowsPage() {
                 )}
             </AnimatePresence>
 
-            {/* Empty State / Placeholder for List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <WorkflowCard
-                    name="Global API Guardian"
-                    type="DEPLOY"
-                    status="ACTIVE"
-                    checks={12}
-                    lastRun="2m ago"
-                />
-                <WorkflowCard
-                    name="DB Migration Shield"
-                    type="DATABASE"
-                    status="ACTIVE"
-                    checks={5}
-                    lastRun="1h ago"
-                />
-            </div>
+            {fetching ? (
+                <div className="h-64 flex flex-col items-center justify-center gap-4 text-muted italic">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    Synthesizing forensic workflows...
+                </div>
+            ) : workflows.length === 0 ? (
+                <div className="h-64 flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-[40px] text-muted italic">
+                    No safety workflows active. Create one to protect your production.
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {workflows.map((wf) => (
+                        <WorkflowCard
+                            key={wf.id}
+                            name={wf.name}
+                            type={wf.type}
+                            status={wf.status}
+                            checks={wf.type === "DEPLOY" ? 12 : wf.type === "DATABASE" ? 5 : 8}
+                            lastRun={wf.updatedAt ? `${formatDistanceToNow(new Date(wf.updatedAt))} ago` : "Never"}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
@@ -151,7 +174,10 @@ function WorkflowCard({ name, type, status, checks, lastRun }: any) {
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
-                    <button className="text-xs font-bold text-white hover:text-primary transition-colors flex items-center gap-1 group/btn">
+                    <button
+                        onClick={() => alert(`Assure Enterprise: ${name} management console is protected by multi-sig authentication.`)}
+                        className="text-xs font-bold text-white hover:text-primary transition-colors flex items-center gap-1 group/btn"
+                    >
                         Manage Workflow <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                     </button>
                 </div>

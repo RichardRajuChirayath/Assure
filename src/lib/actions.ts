@@ -94,6 +94,17 @@ export async function createWorkflow(formData: FormData) {
     });
 }
 
+export async function getWorkflows() {
+    const { user } = await getAuthUser();
+    const userFilter = user ? { creatorId: user.id } : {};
+
+    return await db.workflow.findMany({
+        where: userFilter,
+        orderBy: { createdAt: 'desc' },
+        take: 20
+    });
+}
+
 // ─── Risk Events (Zod Validated) ───────────────────────────
 export async function logRiskEvent(data: {
     actionType: string;

@@ -149,7 +149,7 @@ export function AnalyticsClient({ trendData, verdictData }: AnalyticsClientProps
 
             {/* Phase 3: Safety Memory Scorecards */}
             <div className="mt-12">
-                <SafetyScorecards />
+                <SafetyScorecards totalEvents={totalEvents} />
             </div>
         </div>
     );
