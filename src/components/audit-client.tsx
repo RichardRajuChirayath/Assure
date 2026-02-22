@@ -212,10 +212,8 @@ export function AuditClient({ auditLogs, riskEvents }: AuditClientProps) {
                                                 <td className="px-6 py-6">
                                                     {anchorLog?.blockchainHash ? (
                                                         <a
-                                                            href={getExplorerUrl(anchorLog.blockchainHash)}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all"
+                                                            href={`/dashboard/audit/verify?id=${anchorLog.id}`}
+                                                            className="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all cursor-pointer"
                                                         >
                                                             <Fingerprint className="w-3 h-3 text-emerald-500" />
                                                             <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.1em]">

@@ -1,16 +1,22 @@
+"use client";
+
 import { AuditVerifyClient } from "@/components/audit-verify-client";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export const dynamic = "force-dynamic";
+function VerifyContent() {
+    const searchParams = useSearchParams();
+    const id = searchParams.get("id") || "";
 
-export const metadata = {
-    title: "Verify Integrity | Assure",
-    description: "Verify your audit logs on the blockchain.",
-};
+    return <AuditVerifyClient initialId={id} />;
+}
 
 export default function VerifyPage() {
     return (
         <div className="p-8">
-            <AuditVerifyClient />
+            <Suspense fallback={<div>Loading verify state...</div>}>
+                <VerifyContent />
+            </Suspense>
         </div>
     );
 }

@@ -5,15 +5,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck, Search, Hash, Clock, Database, ExternalLink, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 
-export function AuditVerifyClient() {
-    const [anchorId, setAnchorId] = useState("");
+export function AuditVerifyClient({ initialId = "" }: { initialId?: string }) {
+    const [anchorId, setAnchorId] = useState(initialId);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const handleVerify = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!anchorId) return;
+    // Auto-verify if an ID is passed in the URL
+    useState(() => {
+        if (initialId) {
+            // Give the UI a split second to render first
+            setTimeout(() => executeVerify(initialId), 100);
+        }
+    });
+
+    const executeVerify = async (idToVerify: string) => {
+        if (!idToVerify) return;
 
         setLoading(true);
         setError(null);
@@ -24,13 +31,13 @@ export function AuditVerifyClient() {
             // In a real app, this calls our Smart Contract via the bridge
             await new Promise(r => setTimeout(r, 1500));
 
-            // Mock success based on "demo" ID
-            if (anchorId === "0" || anchorId.length > 3) {
+            if (idToVerify) {
+                // Generate deterministic mock data based on ID
                 setResult({
-                    rootHash: "0x74656d706c6174655f686173685f6173737572655f7632",
-                    timestamp: Math.floor(Date.now() / 1000) - 3600,
-                    metadata: "Assure Production Anchor #142",
-                    txHash: "0x123...abc",
+                    rootHash: `0x${idToVerify.replace(/-/g, '').substring(0, 40) || '74656d706c6174655f686173685f6173737572655f'}`,
+                    timestamp: Math.floor(Date.now() / 1000) - 120,
+                    metadata: `Assure Audit Record ${idToVerify.substring(0, 8)}`,
+                    txHash: `0x${idToVerify.replace(/-/g, '').substring(0, 60) || '123abc456def'}`.padEnd(66, '0'),
                     status: "VERIFIED"
                 });
             } else {
@@ -41,6 +48,11 @@ export function AuditVerifyClient() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleVerify = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await executeVerify(anchorId);
     };
 
     return (
