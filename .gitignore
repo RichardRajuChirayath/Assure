@@ -22,6 +22,7 @@ engine/models/
 vscode-extension/out/
 vscode-extension/node_modules/
 *.vsix
+!public/assure.vsix
 
 # Next.js
 .next/
