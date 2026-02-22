@@ -1,6 +1,6 @@
 "use server";
 
-const BACKEND_URL = process.env.ASSURE_BACKEND_URL || "http://127.0.0.1:3001";
+const ENGINE_URL = process.env.ENGINE_URL || "http://127.0.0.1:8000";
 
 export async function evaluateRisk(data: {
     action_type: string;
@@ -10,39 +10,39 @@ export async function evaluateRisk(data: {
 }) {
     console.log("[Engine Bridge] Initiating evaluation for:", data.action_type);
     try {
-        console.log("[Engine Bridge] Targeting backend:", BACKEND_URL);
-        const response = await fetch(`${BACKEND_URL}/v2/risk/evaluate`, {
+        console.log("[Engine Bridge] Targeting python engine:", ENGINE_URL);
+        const response = await fetch(`${ENGINE_URL}/evaluate`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                actionType: data.action_type,
+                action_type: data.action_type,
                 environment: data.environment,
                 payload: { ...data.payload, threshold: data.threshold },
-                operatorId: "dashboard-user"
+                operator_id: "dashboard-user"
             }),
         });
 
         if (!response.ok) {
             const errorText = await response.text().catch(() => "Unknown error");
-            console.error("[Engine Bridge] Backend error status:", response.status);
-            console.error("[Engine Bridge] Backend error body:", errorText);
-            throw new Error("Assure Backend unavailable");
+            console.error("[Engine Bridge] Engine error status:", response.status);
+            console.error("[Engine Bridge] Engine error body:", errorText);
+            throw new Error("Assure Python Engine unavailable");
         }
 
         const result = await response.json();
-        console.log("[Engine Bridge] Success! Mapped result score:", result.riskScore);
+        console.log("[Engine Bridge] Success! Mapped result score:", result.risk_score);
 
-        // Map Phase 2 backend response to UI format
+        // Map Phase 3.5 Python response to UI format
         return {
-            risk_score: result.riskScore,
+            risk_score: result.risk_score,
             verdict: result.verdict,
             reasoning: result.reasoning,
-            confidence: result.mlConfidence,
-            is_anomaly: result.isAnomaly,
-            breakdown: result.breakdown,
-            planning: result.planning
+            confidence: result.forensics?.semantic_intent || 0,
+            is_anomaly: false,
+            breakdown: result.breakdown || result.forensics || {},
+            planning: result.planning || null
         };
     } catch (error) {
         console.error("Assure Evaluation Failed:", error);
