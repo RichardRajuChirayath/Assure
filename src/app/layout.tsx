@@ -36,8 +36,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+  if (!publishableKey && process.env.NODE_ENV === 'production') {
+    console.warn("⚠️ Warning: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is not defined. Authentication will fail.");
+  }
+
   return (
-    <ClerkProvider appearance={{ baseTheme: dark }}>
+    <ClerkProvider
+      publishableKey={publishableKey}
+      appearance={{ baseTheme: dark }}
+    >
       <html lang="en">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
