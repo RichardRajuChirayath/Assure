@@ -1,6 +1,8 @@
 import { getDashboardStats, getRecentRiskEvents } from "@/lib/actions";
 import { DashboardClient } from "@/components/dashboard-client";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
     const stats = await getDashboardStats();
     const recentEvents = await getRecentRiskEvents();

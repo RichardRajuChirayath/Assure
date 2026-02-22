@@ -1,5 +1,7 @@
 import { AuditVerifyClient } from "@/components/audit-verify-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
     title: "Verify Integrity | Assure",
     description: "Verify your audit logs on the blockchain.",
