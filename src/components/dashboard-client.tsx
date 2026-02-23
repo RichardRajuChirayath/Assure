@@ -222,18 +222,24 @@ export function DashboardClient({ stats: initialStats, recentEvents: initialEven
                         Safety Everywhere: <span className="text-primary">Assure IDE</span>
                     </h2>
                     <p className="text-zinc-400 font-medium leading-relaxed mb-8">
-                        Stop destructive changes before they even hit your terminal. The Assure VS Code extension brings our **Neural Perception** and **PlanNet Recommendations** directly into your editor.
+                        Stop destructive changes before they even hit your terminal. Search for <span className="text-white font-black">"assure-tech"</span> in the VS Code Marketplace to install directly, or use the manual VSIX package below.
                     </p>
                     <div className="flex flex-wrap gap-4">
                         <button
+                            onClick={() => window.open('https://marketplace.visualstudio.com/items?itemName=assure-tech.assure-vscode', '_blank')}
+                            className="px-10 py-5 bg-white text-black text-xs font-black rounded-2xl hover:scale-105 active:scale-95 transition-all uppercase tracking-[0.2em] flex items-center gap-3"
+                        >
+                            Marketplace <Globe className="w-4 h-4" />
+                        </button>
+                        <button
                             onClick={handleDownload}
                             disabled={downloading}
-                            className="px-10 py-5 bg-primary text-white text-xs font-black rounded-2xl hover:scale-105 active:scale-95 transition-all uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(124,105,239,0.3)] flex items-center gap-3 disabled:opacity-50"
+                            className="px-10 py-5 bg-primary/20 text-white text-xs font-black rounded-2xl border border-primary/30 hover:bg-primary/30 transition-all uppercase tracking-[0.2em] flex items-center gap-3 disabled:opacity-50"
                         >
                             {downloading ? (
-                                <>Building Package <Loader2 className="w-4 h-4 animate-spin" /></>
+                                <>Building... <Loader2 className="w-4 h-4 animate-spin" /></>
                             ) : (
-                                <>Download VSIX <Shield className="w-4 h-4" /></>
+                                <>Manual VSIX <Shield className="w-4 h-4" /></>
                             )}
                         </button>
                         <button
