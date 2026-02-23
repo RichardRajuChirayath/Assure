@@ -141,9 +141,14 @@ export function AuditVerifyClient({ initialId = "" }: { initialId?: string }) {
                                 </div>
                             </div>
 
-                            <button className="w-full mt-4 flex items-center justify-center gap-2 text-sm text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 py-2 rounded-lg transition-colors">
+                            <a
+                                href={result.txHash && result.txHash.startsWith("0x") && !result.txHash.endsWith("0000000000000000000") ? `https://amoy.polygonscan.com/tx/${result.txHash}` : "#"}
+                                target={result.txHash && result.txHash.startsWith("0x") && !result.txHash.endsWith("0000000000000000000") ? "_blank" : "_self"}
+                                rel="noopener noreferrer"
+                                className="w-full mt-4 flex items-center justify-center gap-2 text-sm text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-800 py-2 rounded-lg transition-colors cursor-pointer"
+                            >
                                 View on Explorer <ExternalLink className="h-3 w-3" />
-                            </button>
+                            </a>
                         </div>
                     </motion.div>
                 )}

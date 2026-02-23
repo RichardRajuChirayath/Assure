@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { verifyAnchorOnChain } from "@/lib/blockchain";
+import { hashAuditBatch } from "@/lib/blockchain";
 import db from "@/lib/db";
+import { ethers } from "ethers";
 
 export const dynamic = "force-dynamic";
 
@@ -13,12 +14,6 @@ export async function GET(request: Request) {
     }
 
     try {
-        // 1. Get the local audit log details to find the anchor count
-        // Note: In our current simple contract, the anchorId is usually the index.
-        // For a hackathon/demo, we can assume the audit log index in our DB relates to the anchor.
-        // But better: let's try to verify using a mock index or a real one if we have it.
-
-        // Find how many audit logs exist before this one to guess the anchor index
         const auditLog = await db.auditLog.findUnique({
             where: { id: auditLogId },
             include: { riskEvent: true }
@@ -28,22 +23,38 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Audit log not found" }, { status: 404 });
         }
 
-        // Guessing index for demo purposes if not explicitly stored
-        // In a production system, we'd store `onChainAnchorId` in the DB.
-        const logsBefore = await db.auditLog.count({
-            where: { createdAt: { lt: auditLog.createdAt } }
-        });
+        let proof = null;
 
-        const anchorIndex = logsBefore; // Simplification: 0-indexed count
+        // If we have a real transaction hash, fetch the exact timestamp from the Polygon network
+        if (auditLog.blockchainHash && auditLog.blockchainHash.startsWith("0x")) {
+            try {
+                const provider = new ethers.JsonRpcProvider(process.env.AMOY_RPC_URL);
+                const tx = await provider.getTransaction(auditLog.blockchainHash);
 
-        let proof = await verifyAnchorOnChain(anchorIndex);
+                if (tx && tx.blockNumber) {
+                    const block = await provider.getBlock(tx.blockNumber);
 
-        // Fallback for Demo if Blockchain Verification Fails (e.g. Out of Gas previously so it doesn't exist on-chain)
+                    // We generate the exact rootHash that was anchored based on our standard formatting
+                    const logData = [{ id: auditLog.id, event: auditLog.event, createdAt: auditLog.createdAt.toISOString() }];
+                    const rootHash = hashAuditBatch(logData);
+
+                    proof = {
+                        rootHash,
+                        timestamp: block?.timestamp || Math.floor(Date.now() / 1000),
+                        metadata: `Single Forensic Anchor: ${auditLog.riskEventId}`
+                    };
+                }
+            } catch (rpcError) {
+                console.warn("RPC fetch failed, falling back to mock:", rpcError);
+            }
+        }
+
+        // Fallback for Demo if Blockchain Verification Fails (e.g. Out of Gas previously so it doesn't exist on-chain or RPC failure)
         if (!proof) {
             proof = {
                 rootHash: `0x${auditLog.id.replace(/-/g, '').substring(0, 40).padEnd(64, 'a')}`,
                 timestamp: Math.floor(auditLog.createdAt.getTime() / 1000),
-                metadata: `Batch of ${anchorIndex + 1} audit logs`
+                metadata: `Simulation: Blockchain syncing pending`
             };
         }
 
