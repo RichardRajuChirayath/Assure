@@ -105,6 +105,15 @@ export async function getWorkflows() {
     });
 }
 
+export async function deleteWorkflow(id: string) {
+    const { user } = await getAuthUser();
+    if (!user) throw new Error("Authentication required");
+
+    return await db.workflow.delete({
+        where: { id, creatorId: user.id }
+    });
+}
+
 // ─── Risk Events (Zod Validated) ───────────────────────────
 export async function logRiskEvent(data: {
     actionType: string;
