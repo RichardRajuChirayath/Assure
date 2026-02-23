@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { History, ShieldAlert, CheckCircle2, Zap, User, Fingerprint, Lock, AlertTriangle, Terminal, ChevronDown, ChevronUp, Info, Plus, ExternalLink, ShieldCheck, Loader2 } from "lucide-react";
-import { anchorAuditLogs } from "@/lib/actions";
+import { anchorAuditLogs, anchorSingleEvent } from "@/lib/actions";
 import { formatDistanceToNow, format } from "date-fns";
 import { getExplorerUrl } from "@/lib/blockchain";
 
@@ -17,6 +17,8 @@ export function AuditClient({ auditLogs, riskEvents }: AuditClientProps) {
     const [anchorResult, setAnchorResult] = useState<string | null>(null);
     const [expandedRow, setExpandedRow] = useState<string | null>(null);
     const [isMounted, setIsMounted] = useState(false);
+    const [syncingRows, setSyncingRows] = useState<Set<string>>(new Set());
+
 
     useEffect(() => {
         setIsMounted(true);
@@ -54,6 +56,26 @@ export function AuditClient({ auditLogs, riskEvents }: AuditClientProps) {
         }
     }
 
+    async function handleRowSync(eventId: string, e: React.MouseEvent) {
+        e.stopPropagation(); // Don't expand the row when clicking sync
+        setSyncingRows(prev => new Set(prev).add(eventId));
+        try {
+            const result = await anchorSingleEvent(eventId);
+            setAnchorResult(result.message);
+            // Wait for response before reloading (blockchain sim takes ~4s)
+            setTimeout(() => window.location.reload(), 2000);
+        } catch (err) {
+            setAnchorResult("Sync failed. Check connection.");
+        } finally {
+            setSyncingRows(prev => {
+                const next = new Set(prev);
+                next.delete(eventId);
+                return next;
+            });
+        }
+    }
+
+
     const toggleRow = (id: string) => {
         setExpandedRow(expandedRow === id ? null : id);
     };
@@ -73,16 +95,7 @@ export function AuditClient({ auditLogs, riskEvents }: AuditClientProps) {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {pendingCount > 0 ? (
-                        <button
-                            onClick={handleManualSync}
-                            disabled={anchoring}
-                            className="px-6 py-3 bg-white/5 border border-white/10 text-white font-black rounded-xl hover:bg-white/10 transition-all flex items-center gap-3 disabled:opacity-50 text-xs"
-                        >
-                            {anchoring ? <Loader2 className="w-3 h-3 animate-spin" /> : <Lock className="w-3 h-3 text-amber-500" />}
-                            Sync {pendingCount} Pending Logs
-                        </button>
-                    ) : (
+                    {pendingCount === 0 && (
                         <div className="px-5 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-3">
                             <ShieldCheck className="w-4 h-4 text-emerald-500" />
                             <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Autonomous Sync Active</span>
@@ -213,6 +226,7 @@ export function AuditClient({ auditLogs, riskEvents }: AuditClientProps) {
                                                     {anchorLog?.blockchainHash ? (
                                                         <a
                                                             href={`/dashboard/audit/verify?id=${anchorLog.id}`}
+                                                            onClick={(e) => e.stopPropagation()}
                                                             className="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all cursor-pointer"
                                                         >
                                                             <Fingerprint className="w-3 h-3 text-emerald-500" />
@@ -221,13 +235,23 @@ export function AuditClient({ auditLogs, riskEvents }: AuditClientProps) {
                                                             </span>
                                                             <ExternalLink className="w-2.5 h-2.5 text-emerald-500/50 group-hover:text-emerald-500 transition-colors" />
                                                         </a>
-                                                    ) : (
-                                                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 opacity-40">
-                                                            <Loader2 className="w-3 h-3 text-zinc-500 animate-spin" />
-                                                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                                                    ) : syncingRows.has(event.id) ? (
+                                                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 animate-pulse">
+                                                            <Loader2 className="w-3 h-3 text-primary animate-spin" />
+                                                            <span className="text-[10px] font-black text-primary uppercase tracking-widest">
                                                                 Syncing
                                                             </span>
                                                         </div>
+                                                    ) : (
+                                                        <button
+                                                            onClick={(e) => handleRowSync(event.id, e)}
+                                                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-primary/20 hover:border-primary/30 text-zinc-400 hover:text-primary transition-all group/sync"
+                                                        >
+                                                            <Lock className="w-3 h-3 group-hover/sync:text-primary" />
+                                                            <span className="text-[10px] font-black uppercase tracking-widest">
+                                                                Sync to Chain
+                                                            </span>
+                                                        </button>
                                                     )}
                                                 </td>
                                             </tr>

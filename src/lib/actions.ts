@@ -242,6 +242,52 @@ export async function anchorAuditLogs() {
     };
 }
 
+export async function anchorSingleEvent(eventId: string) {
+    const { user } = await getAuthUser();
+
+    // 1. Ensure the event exists
+    const event = await db.riskEvent.findUnique({
+        where: { id: eventId, ...(user ? { userId: user.id } : {}) },
+        include: { auditLogs: true }
+    });
+
+    if (!event) throw new Error("Event not found");
+
+    // 2. Check if already has a verified audit log
+    const existingVerifiedLog = event.auditLogs.find(l => l.blockchainHash !== null);
+    if (existingVerifiedLog) return { message: "Already verified", txHash: existingVerifiedLog.blockchainHash };
+
+    // 3. Create or find entry without hash
+    let auditLog = event.auditLogs.find(l => l.blockchainHash === null);
+    if (!auditLog) {
+        auditLog = await db.auditLog.create({
+            data: {
+                event: `${event.verdict}: ${event.actionType}`,
+                details: event.reasoning || "No details",
+                riskEventId: event.id,
+                blockchainHash: null
+            }
+        });
+    }
+
+    // 4. Anchor this specific log
+    const { hashAuditBatch, anchorHashOnChain } = await import("./blockchain");
+    const logData = [{
+        id: auditLog.id, event: auditLog.event, createdAt: auditLog.createdAt.toISOString()
+    }];
+    const rootHash = hashAuditBatch(logData);
+    const txHash = await anchorHashOnChain(rootHash, `Single Forensic Anchor: ${event.id}`);
+
+    if (txHash) {
+        await db.auditLog.update({
+            where: { id: auditLog.id },
+            data: { blockchainHash: txHash }
+        });
+    }
+
+    return { message: txHash ? `Verified on Polygon: ${txHash}` : "Anchor Failed", txHash };
+}
+
 // ─── Audit Logs ────────────────────────────────────────────
 export async function getAuditLogs() {
     const { user } = await getAuthUser();
