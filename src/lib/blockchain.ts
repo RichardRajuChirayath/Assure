@@ -8,8 +8,8 @@ const CONTRACT_ABI = [
     "event AuditAnchored(uint256 indexed id, bytes32 indexed rootHash, uint256 timestamp)"
 ];
 
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_AUDIT_CONTRACT || "";
-const RPC_URL = process.env.AMOY_RPC_URL || "";
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_AUDIT_CONTRACT || "0x33D24d54D2d0549fE62A0c6dAa469aC16202e633";
+const RPC_URL = process.env.AMOY_RPC_URL || "https://rpc-amoy.polygon.technology";
 const PRIVATE_KEY = process.env.BLOCKCHAIN_PRIVATE_KEY || "";
 
 /**
